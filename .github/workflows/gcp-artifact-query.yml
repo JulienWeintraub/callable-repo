@@ -1,4 +1,4 @@
-name: Core curl reusable workflow
+name: Core gcloud reusable workflow
 
 on:
   workflow_call:
