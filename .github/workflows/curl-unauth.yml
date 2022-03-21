@@ -1,0 +1,26 @@
+name: Core curl reusable workflow
+
+on:
+  workflow_call:
+    inputs:
+      url:
+        required: true
+        type: string
+      headers:
+        required: false
+        type: string
+      method:
+        required: false
+        type: string
+        default: "GET"
+
+jobs:
+  curl_request:
+    name: Request the endpoint with curl
+    runs-on: ubuntu-latest
+    env:
+      WORKKING_DIRECTORY: .
+    steps:
+      - name: curl request to the endpoint (${{ inputs.url }})
+        run: |-
+          curl --fail ${{ inputs.headers }} -LI --request ${{ inputs.method }} --url "${{ inputs.url }}"

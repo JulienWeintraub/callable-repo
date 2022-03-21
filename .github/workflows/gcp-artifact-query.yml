@@ -1,0 +1,65 @@
+name: Core curl reusable workflow
+
+on:
+  workflow_call:
+    inputs:
+      REGION:
+        required: false
+        type: string
+        default: "europe-west1"
+      PROJECT_ID:
+        required: false
+        type: string
+        default: "ornikar-images"
+      ARTIFACT_REGISTRY_ID:
+        required: false
+        type: string
+        default: "ornikar-images"
+      SERVICE:
+        required: false
+        type: string
+        default: "circleci-php73"
+      TAG:
+        required: false
+        type: string
+        default: v1
+    secrets:
+      ARTIFACT_REGISTRY_RO_KEY:
+        required: true
+
+jobs:
+  prerequisites-checking:
+    runs-on: ubuntu-latest
+    outputs:
+      is-image-exists: ${{ steps.check-image-existing.outputs.tags }}
+    steps:
+      - name: Checkout 🐙
+        uses: actions/checkout@v3
+
+      - name: Google Authentication
+        uses: google-github-actions/auth@v0
+        with:
+          credentials_json: ${{ secrets.ARTIFACT_REGISTRY_RO_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: 'google-github-actions/setup-gcloud@v0'
+
+      - name: Configure docker to use the gcloud command-line as credential helper
+        run: gcloud auth configure-docker ${{ inputs.REGION }}-docker.pkg.dev
+
+      - name: Check image existing (last commit)
+        # github.sha used in a no semver model
+        # Please adapt in case of change
+        id: check-image-existing
+        # env:
+        #   REGION: ${{ inputs.REGION }}
+        #   PROJECT_ID: ${{ inputs.PROJECT_ID }}
+        #   ARTIFACT_REGISTRY_ID: ${{ inputs.ARTIFACT_REGISTRY_ID }}
+        #   SERVICE: ${{ inputs.SERVICE }}
+        run: |-
+          export tags=`gcloud artifacts docker images list ${{ inputs.REGION }}-docker.pkg.dev/${{ inputs.PROJECT_ID }}/${{ inputs.ARTIFACT_REGISTRY_ID }}/${{ inputs.SERVICE }} --limit=5 --include-tags --format="json" --filter="TAGS~${{ inputs.TAG }}" | jq -r '.[].tags'`
+          if [[ "x${{ env.tags }}" =~ "xv1" ]]; then
+            echo ::"set-output name=tags::${{ env.tags }}"
+          else
+            echo ::"set-output name=tags::false"
+          fi
