@@ -31,7 +31,7 @@ jobs:
   prerequisites-checking:
     runs-on: ubuntu-latest
     outputs:
-      is-image-exists: ${{ steps.check-image-existing.outputs.tags }}
+      image-existing: ${{ steps.check-image-existing.outputs.is-image-exists }}
     steps:
       - name: Checkout 🐙
         uses: actions/checkout@v3
@@ -48,19 +48,12 @@ jobs:
         run: gcloud auth configure-docker ${{ inputs.REGION }}-docker.pkg.dev
 
       - name: Check image existing (last commit)
-        # github.sha used in a no semver model
-        # Please adapt in case of change
         id: check-image-existing
-        # env:
-        #   REGION: ${{ inputs.REGION }}
-        #   PROJECT_ID: ${{ inputs.PROJECT_ID }}
-        #   ARTIFACT_REGISTRY_ID: ${{ inputs.ARTIFACT_REGISTRY_ID }}
-        #   SERVICE: ${{ inputs.SERVICE }}
         run: |-
           export tags=`gcloud artifacts docker images list ${{ inputs.REGION }}-docker.pkg.dev/${{ inputs.PROJECT_ID }}/${{ inputs.ARTIFACT_REGISTRY_ID }}/${{ inputs.SERVICE }} --limit=5 --include-tags --format="json" --filter="TAGS~${{ inputs.TAG }}" | jq -r '.[].tags'`
 
           if [[ "x$tags" =~ "xv1" ]]; then
-            echo ::"set-output name=tags::$tags"
+            echo ::"set-output name=is-image-exists::$tags"
           else
-            echo ::"set-output name=tags::false"
+            echo ::"set-output name=is-image-exists::false"
           fi
