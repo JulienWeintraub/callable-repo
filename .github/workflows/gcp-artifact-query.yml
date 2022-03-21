@@ -26,6 +26,10 @@ on:
     secrets:
       ARTIFACT_REGISTRY_RO_KEY:
         required: true
+    outputs:
+      is-image-exists:
+        description: show if image exists in the remote Registry
+        value: ${{ jobs.prerequisites-checking.outputs.image-existing }}
 
 jobs:
   prerequisites-checking:
