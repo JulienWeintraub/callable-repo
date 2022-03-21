@@ -58,6 +58,10 @@ jobs:
         #   SERVICE: ${{ inputs.SERVICE }}
         run: |-
           export tags=`gcloud artifacts docker images list ${{ inputs.REGION }}-docker.pkg.dev/${{ inputs.PROJECT_ID }}/${{ inputs.ARTIFACT_REGISTRY_ID }}/${{ inputs.SERVICE }} --limit=5 --include-tags --format="json" --filter="TAGS~${{ inputs.TAG }}" | jq -r '.[].tags'`
+          echo "tags1=$tags"
+          echo "tags2=${{ env.tags }}"
+          echo "tags3=${ env.tags }"
+          
           if [[ "x${{ env.tags }}" =~ "xv1" ]]; then
             echo ::"set-output name=tags::${{ env.tags }}"
           else
